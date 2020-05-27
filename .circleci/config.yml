@@ -1,0 +1,89 @@
+version: 2.1
+jobs:
+  build:
+    machine:
+      image: 'ubuntu-1604:202004-01'
+    
+    environment:
+      - REPO_URL: https://github.com/openwrt/openwrt.git
+      - REPO_BRANCH: master
+      - BUILD_CONFIG: .config-orangepir1
+      - TZ: Asia/Kolkata
+
+    steps:
+      - run:
+          name: Prepare system
+          command: |
+            sudo timedatectl set-timezone "$TZ"
+            sudo rm -rf /var/lib/apt/lists/lock
+            sudo apt-get update
+            sudo rm -rf /var/lib/apt/lists/lock
+            sudo apt-get install -yq subversion build-essential libncurses5-dev zlib1g-dev gawk git ccache gettext libssl-dev xsltproc zip rsync swig python3-dev
+      
+      - checkout
+      
+      - restore_cache:
+          keys:
+            - cache-{{ checksum "/.circleci/cache" }}
+      
+      - run:
+          name: Clone repo
+          command: |
+            git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+      
+      - run:
+          name: Update repo
+          command: |
+            cd openwrt/
+            git reset --hard
+            git pull
+
+      - run:
+          name: Install feeds
+          command: |
+            cd openwrt/
+            ./scripts/feeds update -a
+            ./scripts/feeds install -a
+
+      - run:
+          name: Load .config
+          command: |
+            cp config/$BUILD_CONFIG openwrt/.config
+
+      - run:
+          name: Download Files
+          command: |
+            cd openwrt/
+            make defconfig
+            make -j8 download
+
+      - run:
+          name: Compile toolchains
+          command: |
+            cd openwrt/
+            make -j3 tools/compile
+            make -j3 toolchain/compile
+            make -j3 tools/install
+            make -j3 toolchain/install
+
+      - run:
+          name: Compile OpenWrt
+          command: |
+            cd openwrt/
+            make -j3
+
+      - run:
+          name: Reduce Cache Size
+          command: |
+            cd openwrt/
+            cp -r bin/ ../upload/
+            make -j3 clean
+            sudo rm -rf dl/
+
+      - save_cache:
+          key: cache-{{ checksum "/.circleci/cache" }}
+          paths:
+            - openwrt
+
+      - store_artifacts:
+          path: upload/
