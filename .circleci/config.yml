@@ -18,13 +18,13 @@ jobs:
             sudo rm -rf /var/lib/apt/lists/lock
             sudo apt-get update
             sudo rm -rf /var/lib/apt/lists/lock
-            sudo apt-get install -yq subversion build-essential libncurses5-dev zlib1g-dev gawk git ccache gettext libssl-dev xsltproc zip rsync swig python3-dev
+            sudo apt-get install -yq subversion build-essential libncurses5-dev zlib1g-dev gawk git ccache gettext libssl-dev xsltproc zip rsync swig unzip python3-dev
       
       - checkout
       
       - restore_cache:
           keys:
-            - cache-{{ checksum "/.circleci/cache" }}
+            - cache-{{ checksum ".circleci/cache" }}
       
       - run:
           name: Clone repo
@@ -59,6 +59,7 @@ jobs:
 
       - run:
           name: Compile toolchains
+          no_output_timeout: 50m
           command: |
             cd openwrt/
             make -j3 tools/compile
@@ -68,6 +69,7 @@ jobs:
 
       - run:
           name: Compile OpenWrt
+          no_output_timeout: 50m
           command: |
             cd openwrt/
             make -j3
@@ -80,8 +82,18 @@ jobs:
             make -j3 clean
             sudo rm -rf dl/
 
+      - run:
+          name: Clean Artifacts
+          command: |
+            cd upload/
+            zip -r packages.zip packages/
+            sudo rm -rf packages/
+            cd targets/*/*
+            zip -r target-packages.zip packages/
+            sudo rm -rf packages/
+
       - save_cache:
-          key: cache-{{ checksum "/.circleci/cache" }}
+          key: cache-{{ checksum ".circleci/cache" }}
           paths:
             - openwrt
 
