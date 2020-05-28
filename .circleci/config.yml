@@ -111,5 +111,5 @@ workflows:
     jobs:
       - prepare
       - build:
-          required:
+          requires:
             - prepare
