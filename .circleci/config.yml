@@ -32,7 +32,7 @@ jobs:
       
       - restore_cache:
           keys:
-            - cache-{{ checksum ".circleci/cache" }}
+            - cache-{{ checksum ".circleci/cache-armv7" }}
       
       - run:
           name: Clone repo
@@ -43,15 +43,7 @@ jobs:
           name: Update repo
           command: |
             cd openwrt/
-            git reset --hard
             git pull
-
-      - run:
-          name: Install feeds
-          command: |
-            cd openwrt/
-            ./scripts/feeds update -a
-            ./scripts/feeds install -a
 
       - run:
           name: Load .config
@@ -75,36 +67,10 @@ jobs:
             make -j3 tools/install
             make -j3 toolchain/install
 
-      - run:
-          name: Compile OpenWrt
-          no_output_timeout: 50m
-          command: |
-            cd openwrt/
-            make -j3
-
-      - run:
-          name: Copy bin directory
-          command: |
-            cd openwrt/
-            cp -r bin/ ../upload/
-
-      - run:
-          name: Clean Artifacts
-          command: |
-            cd upload/
-            zip -r packages.zip packages/
-            sudo rm -rf packages/
-            cd targets/*/*
-            zip -r target-packages.zip packages/
-            sudo rm -rf packages/
-
       - save_cache:
-          key: cache-{{ checksum ".circleci/cache" }}
+          key: cache-{{ checksum ".circleci/cache-armv7" }}
           paths:
             - openwrt/
-
-      - store_artifacts:
-          path: upload/
 
 workflows:
   version: 2
