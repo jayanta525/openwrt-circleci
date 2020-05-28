@@ -4,6 +4,9 @@ jobs:
     machine:
       image: 'ubuntu-1604:202004-01'
 
+    environment:
+      - TZ: Asia/Kolkata
+
     steps:
       - run:
           name: Prepare system
