@@ -1,14 +1,8 @@
 version: 2.1
 jobs:
-  build:
+  prepare:
     machine:
       image: 'ubuntu-1604:202004-01'
-    
-    environment:
-      - REPO_URL: https://github.com/openwrt/openwrt.git
-      - REPO_BRANCH: master
-      - BUILD_CONFIG: .config-orangepir1
-      - TZ: Asia/Kolkata
 
     steps:
       - run:
@@ -19,7 +13,18 @@ jobs:
             sudo apt-get update
             sudo rm -rf /var/lib/apt/lists/lock
             sudo apt-get install -yq subversion build-essential libncurses5-dev zlib1g-dev gawk git ccache gettext libssl-dev xsltproc zip rsync swig unzip python3-dev
-      
+
+  build:
+    machine:
+      image: 'ubuntu-1604:202004-01'
+    
+    environment:
+      - REPO_URL: https://github.com/openwrt/openwrt.git
+      - REPO_BRANCH: master
+      - BUILD_CONFIG: .config-orangepir1
+      - TZ: Asia/Kolkata
+
+    steps:      
       - checkout
       
       - restore_cache:
@@ -29,7 +34,7 @@ jobs:
       - run:
           name: Clone repo
           command: |
-            git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+            git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt || true
       
       - run:
           name: Update repo
@@ -99,3 +104,12 @@ jobs:
 
       - store_artifacts:
           path: upload/
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - prepare
+      - build:
+          required:
+            - prepare
