@@ -83,12 +83,10 @@ jobs:
             make -j3
 
       - run:
-          name: Reduce Cache Size
+          name: Copy bin directory
           command: |
             cd openwrt/
             cp -r bin/ ../upload/
-            make -j3 clean
-            sudo rm -rf dl/
 
       - run:
           name: Clean Artifacts
@@ -103,7 +101,7 @@ jobs:
       - save_cache:
           key: cache-{{ checksum ".circleci/cache" }}
           paths:
-            - openwrt
+            - openwrt/
 
       - store_artifacts:
           path: upload/
