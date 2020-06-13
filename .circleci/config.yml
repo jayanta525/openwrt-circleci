@@ -1,82 +1,126 @@
-version: 2.1
+version: 2
 jobs:
   prepare:
     machine:
-      image: 'ubuntu-1604:202004-01'
-
-    environment:
-      - TZ: Asia/Kolkata
+      image: ubuntu-1604:201903-01
+    
+    working_directory: ~/
 
     steps:
       - run:
-          name: Prepare system
+          name: Prepare
           command: |
-            sudo timedatectl set-timezone "$TZ"
             sudo rm -rf /var/lib/apt/lists/lock
             sudo apt-get update
             sudo rm -rf /var/lib/apt/lists/lock
-            sudo apt-get install -yq subversion build-essential libncurses5-dev zlib1g-dev gawk git ccache gettext libssl-dev xsltproc zip rsync swig unzip python3-dev
+            sudo apt-get install -yq swig python3-dev build-essential git unzip ncurses-dev libz-dev libssl-dev python subversion gettext gawk wget curl rsync perl libelf-dev python3.5 libpython3.5-stdlib liblzma-dev
+            pyenv global 3.5.2
 
-  build:
+  build_rock_pi_e:
     machine:
-      image: 'ubuntu-1604:202004-01'
-    
-    environment:
-      - REPO_URL: https://github.com/openwrt/openwrt.git
-      - REPO_BRANCH: master
-      - BUILD_CONFIG: .config-orangepir1
-      - TZ: Asia/Kolkata
+      image: ubuntu-1604:201903-01
 
-    steps:      
-      - checkout
+    working_directory: ~/
+    steps:
+      - run:
+          name: generate_cache_hash
+          command: |
+            echo "radxa1306-main" > /tmp/armv8-cache
       
       - restore_cache:
           keys:
-            - cache-{{ checksum ".circleci/cache-armv7" }}
-      
-      - run:
-          name: Clone repo
-          command: |
-            git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt || true
-      
-      - run:
-          name: Update repo
-          command: |
-            cd openwrt/
-            git pull
+            - cache-{{ checksum "/tmp/armv8-cache" }}
 
       - run:
-          name: Load .config
+          name: Build toolchain
+          no_output_timeout: 60m
           command: |
-            cp config/$BUILD_CONFIG openwrt/.config
-
-      - run:
-          name: Download Files
-          command: |
+            git clone --depth 2 -b rk3328 https://github.com/jayanta525/rock-pi-e.git openwrt || true
+            git config --global user.email "ubuntu@circleci.com"
+            git config --global user.name "CircleCI"
             cd openwrt/
+            git pull || true
+            sudo apt-get update
+            sudo apt-get install -yq swig python3-dev zip libelf-dev
+            pyenv global 3.5.2
+            wget https://raw.githubusercontent.com/jayanta525/openwrt-circleci/master/config.seed -O .config
             make defconfig
-            make -j8 download
-
-      - run:
-          name: Compile toolchains
-          no_output_timeout: 50m
-          command: |
-            cd openwrt/
+            make -j3 download
             make -j3 tools/compile
             make -j3 toolchain/compile
             make -j3 tools/install
             make -j3 toolchain/install
 
+      - run:
+          name: Install Feeds
+          no_output_timeout: 60m
+          command: |
+            cd openwrt
+            pyenv global 3.5.2
+            wget https://raw.githubusercontent.com/jayanta525/openwrt-circleci/master/feeds.conf -O feeds.conf
+            ./scripts/feeds update -a
+            ./scripts/feeds install -a
+
+      - run:
+          name: Build Kernel
+          no_output_timeout: 60m
+          command: |
+            cd openwrt
+            pyenv global 3.5.2
+            make defconfig
+            make -j3 target/compile
+
+      - run:
+          name: Build Packages
+          no_output_timeout: 60m
+          command: |
+            cd openwrt
+            pyenv global 3.5.2
+            make -j3 package/{compile,install}
+
       - save_cache:
-          key: cache-{{ checksum ".circleci/cache-armv7" }}
+          key: cache-{{ checksum "/tmp/armv8-cache" }}
           paths:
             - openwrt/
+
+      - run:
+          name: Build OpenWrt Image
+          no_output_timeout: 60m
+          command: |
+            cd openwrt
+            pyenv global 3.5.2
+            make -j3
+
+      - run:
+          name: Organize image files
+          no_output_timeout: 60m
+          command: |
+            cd openwrt/bin/
+            rm -rf packages/
+            cd target/rockchip/armv8/
+            zip -r target-package.zip packages/
+            rm -rf packages/
+
+      - store_artifacts:
+          path: openwrt/bin/
 
 workflows:
   version: 2
   main:
     jobs:
-      - prepare
-      - build:
+      - prepare:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: 
+                - master
+      - build_rock_pi_e:
           requires:
             - prepare
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: 
+                - master
