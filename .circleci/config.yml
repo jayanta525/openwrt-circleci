@@ -97,7 +97,7 @@ jobs:
           command: |
             cd openwrt/bin/
             rm -rf packages/
-            cd target/rockchip/armv8/
+            cd targets/rockchip/armv8/
             zip -r target-package.zip packages/
             rm -rf packages/
 
