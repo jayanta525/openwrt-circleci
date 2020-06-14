@@ -54,7 +54,7 @@ jobs:
           name: Install Feeds
           no_output_timeout: 60m
           command: |
-            cd openwrt
+            cd openwrt/
             pyenv global 3.5.2
             rm .config
             rm feeds.conf
@@ -67,6 +67,7 @@ jobs:
           name: Build toolchain
           no_output_timeout: 60m
           command: |
+            cd openwrt/
             pyenv global 3.5.2
             make defconfig
             make -j3 download
@@ -79,7 +80,7 @@ jobs:
           name: Build Kernel
           no_output_timeout: 60m
           command: |
-            cd openwrt
+            cd openwrt/
             pyenv global 3.5.2
             make -j3 target/compile
 
@@ -87,7 +88,7 @@ jobs:
           name: Build OpenWrt Image
           no_output_timeout: 60m
           command: |
-            cd openwrt
+            cd openwrt/
             pyenv global 3.5.2
             make -j3
 
