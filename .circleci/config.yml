@@ -25,7 +25,7 @@ jobs:
       - BRANCH: rk3328
       - CONFIG: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/master/config.seed
       - FEEDS: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/master/feeds.conf
-      - CACHE: radxa1306-main2
+      - CACHE: radxa1306-main2-update
 
     working_directory: ~/
     steps:
@@ -56,8 +56,8 @@ jobs:
           command: |
             cd openwrt/
             pyenv global 3.5.2
-            rm .config
-            rm feeds.conf
+            rm .config || true
+            rm feeds.conf || true
             wget $CONFIG -O .config
             wget $FEEDS -O feeds.conf
             ./scripts/feeds update -a
