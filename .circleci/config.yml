@@ -56,6 +56,9 @@ jobs:
           command: |
             cd openwrt
             pyenv global 3.5.2
+            rm .config
+            rm feeds.conf
+            wget $CONFIG -O .config
             wget $FEEDS -O feeds.conf
             ./scripts/feeds update -a
             ./scripts/feeds install -a
@@ -64,9 +67,8 @@ jobs:
           name: Build toolchain
           no_output_timeout: 60m
           command: |
-            wget $CONFIG -O .config
-            make defconfig
             pyenv global 3.5.2
+            make defconfig
             make -j3 download
             make -j3 tools/compile
             make -j3 toolchain/compile
