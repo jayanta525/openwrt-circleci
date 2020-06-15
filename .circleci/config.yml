@@ -136,7 +136,7 @@ workflows:
               only: /.*/
             branches:
               only: 
-                - master
+                - mptcp
       - build_rock_pi_e:
           requires:
             - prepare
@@ -145,4 +145,4 @@ workflows:
               only: /.*/
             branches:
               only: 
-                - master
+                - mptcp
