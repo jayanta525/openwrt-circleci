@@ -22,10 +22,10 @@ jobs:
 
     environment:
       - REPO_URL: https://github.com/jayanta525/rock-pi-e.git
-      - BRANCH: rk3328
-      - CONFIG: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/master/config.seed
-      - FEEDS: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/master/feeds.conf
-      - CACHE: radxa1306-main2-update2
+      - BRANCH: mptcp
+      - CONFIG: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/mptcp/config.seed
+      - FEEDS: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/mptcp/feeds.conf
+      - CACHE: radxa1306-main2-mptcp
 
     working_directory: ~/
     steps:
@@ -51,7 +51,7 @@ jobs:
             sudo apt-get install -yq swig python3-dev zip libelf-dev
 
       - run:
-          name: Install Feeds
+          name: Update Feeds
           no_output_timeout: 60m
           command: |
             cd openwrt/
@@ -60,7 +60,23 @@ jobs:
             rm feeds.conf || true
             wget $FEEDS -O feeds.conf
             ./scripts/feeds update -a
-            ./scripts/feeds install -a
+      - run:
+          name: Execute Script
+          no_output_timeout: 60m
+          command: |
+            cd openwrt/
+            wget -O - https://raw.githubusercontent.com/jayanta525/openwrt-circleci/mptcp/scripts/clean-feeds.sh | bash
+            wget -O - https://raw.githubusercontent.com/jayanta525/openwrt-circleci/mptcp/scripts/feeds-change.sh | bash
+
+      - run:
+          name: Install Feeds
+          no_output_timeout: 60m
+          command: |
+            cd openwrt/
+            pyenv global 3.5.2
+            ./scripts/feeds install -a -d m -p packages
+            ./scripts/feeds install -a -d m -p luci
+            ./scripts/feeds install -a -d y -f -p mptcp
             wget $CONFIG -O .config
             make defconfig
 
