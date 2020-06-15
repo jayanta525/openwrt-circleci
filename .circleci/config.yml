@@ -78,7 +78,7 @@ jobs:
             ./scripts/feeds install -a -d m -p luci
             ./scripts/feeds install -a -d y -f -p mptcp
             wget $CONFIG -O .config
-#            make defconfig
+            make defconfig
 
       - run:
           name: Build toolchain
