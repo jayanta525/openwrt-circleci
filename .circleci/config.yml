@@ -25,7 +25,7 @@ jobs:
       - BRANCH: mptcp
       - CONFIG: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/mptcp/config.seed
       - FEEDS: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/mptcp/feeds.conf
-      - CACHE: radxa1306-main2-mptcp
+      - CACHE: radxa1306-main2-mptcp2
 
     working_directory: ~/
     steps:
@@ -78,7 +78,7 @@ jobs:
             ./scripts/feeds install -a -d m -p luci
             ./scripts/feeds install -a -d y -f -p mptcp
             wget $CONFIG -O .config
-            make defconfig
+#            make defconfig
 
       - run:
           name: Build toolchain
