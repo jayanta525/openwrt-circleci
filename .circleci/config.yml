@@ -58,6 +58,8 @@ jobs:
             pyenv global 3.5.2
             rm .config || true
             rm feeds.conf || true
+            make clean
+            ./scripts/feeds clean
             wget $FEEDS -O feeds.conf
             ./scripts/feeds update -a
       - run:
