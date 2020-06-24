@@ -16,16 +16,16 @@ jobs:
             sudo apt-get install -yq swig python3-dev build-essential git unzip ncurses-dev libz-dev libssl-dev python subversion gettext gawk wget curl rsync perl libelf-dev python3.5 libpython3.5-stdlib liblzma-dev
             pyenv global 3.5.2
 
-  build_rock_pi_e:
+  build_openwrt:
     machine:
       image: ubuntu-1604:201903-01
 
     environment:
-      - REPO_URL: https://github.com/jayanta525/rock-pi-e.git
-      - BRANCH: mptcp
-      - CONFIG: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/mptcp/config.seed
-      - FEEDS: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/mptcp/feeds.conf
-      - CACHE: radxa1306-main2-mptcp2
+      - REPO_URL: https://github.com/jayanta525/openwrt-nanopi-r2s.git
+      - BRANCH: mptcp-nanopi
+      - CONFIG: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/nanopi/config.seed
+      - FEEDS: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/nanopi/feeds.conf
+      - CACHE: nanopi-mptcp
 
     working_directory: ~/
     steps:
@@ -46,7 +46,6 @@ jobs:
             git config --global user.email "ubuntu@circleci.com"
             git config --global user.name "CircleCI"
             cd openwrt/
-            git pull || true
             sudo apt-get update
             sudo apt-get install -yq swig python3-dev zip libelf-dev
 
@@ -66,8 +65,8 @@ jobs:
           no_output_timeout: 60m
           command: |
             cd openwrt/
-            wget -O - https://raw.githubusercontent.com/jayanta525/openwrt-circleci/mptcp/scripts/clean-feeds.sh | bash
-            wget -O - https://raw.githubusercontent.com/jayanta525/openwrt-circleci/mptcp/scripts/feeds-change.sh | bash
+            wget -O - https://raw.githubusercontent.com/jayanta525/openwrt-circleci/nanopi/scripts/clean-feeds.sh | bash
+            wget -O - https://raw.githubusercontent.com/jayanta525/openwrt-circleci/nanopi/scripts/feeds-change.sh | bash
 
       - run:
           name: Install Feeds
@@ -138,8 +137,8 @@ workflows:
               only: /.*/
             branches:
               only: 
-                - mptcp
-      - build_rock_pi_e:
+                - nanopi
+      - build_openwrt:
           requires:
             - prepare
           filters:
@@ -147,4 +146,4 @@ workflows:
               only: /.*/
             branches:
               only: 
-                - mptcp
+                - nanopi
