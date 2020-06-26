@@ -109,6 +109,11 @@ jobs:
             pyenv global 3.5.2
             make -j3
 
+      - run:
+          name: Duplicate cache
+          command: |
+            echo "new-duplicate" > /tmp/armv8-cache
+
       - save_cache:
           key: cache-{{ checksum "/tmp/armv8-cache" }}
           paths:
