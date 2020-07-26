@@ -5,14 +5,23 @@ jobs:
       image: ubuntu-1604:201903-01
 
     environment:
-      - REPO_URL: https://github.com/jayanta525/openwrt-nanopi-r2s.git
-      - BRANCH: mptcp-nanopi
-      - CONFIG: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/nanopi/config.seed
-      - FEEDS: https://raw.githubusercontent.com/jayanta525/openwrt-circleci/nanopi/feeds.conf
-      - CACHE: nanopi-mptcp
+      - REPO_URL: https://github.com/jayanta525/rock-pi-e.git
+      - BRANCH: rk3328
+      - CONFIG: config.seed
+      - FEEDS: feeds.conf
+      - SCRIPT1: scripts/feeds-change.sh
+      - SCRIPT2: scripts/opkg-source.sh
+      - CACHE: 21jul2020
 
     working_directory: ~/
     steps:
+      - run:
+          name: Prepare for checkout
+          command: |
+            mkdir github
+      - checkout:
+          path: github/
+
       - run:
           name: generate_cache_hash
           command: |
@@ -29,9 +38,13 @@ jobs:
             git clone --depth 1 -b $BRANCH $REPO_URL openwrt || true
             git config --global user.email "ubuntu@circleci.com"
             git config --global user.name "CircleCI"
-            cd openwrt/
             sudo apt-get update
             sudo apt-get install -yq swig python3-dev zip libelf-dev
+
+      - run:
+          name: Clear previous builds
+          command: |
+            rm -rf openwrt/bin/targets || true
 
       - run:
           name: Update Feeds
@@ -40,17 +53,26 @@ jobs:
             cd openwrt/
             pyenv global 3.5.2
             rm .config || true
-            rm feeds.conf || true
             ./scripts/feeds clean
-            wget $FEEDS -O feeds.conf
+            rm feeds.conf || true
+            cp ../github/$FEEDS feeds.conf
             ./scripts/feeds update -a
+
       - run:
-          name: Execute Script
+          name: Execute Script-1
           no_output_timeout: 60m
           command: |
             cd openwrt/
-            wget -O - https://raw.githubusercontent.com/jayanta525/openwrt-circleci/nanopi/scripts/clean-feeds.sh | bash
-            wget -O - https://raw.githubusercontent.com/jayanta525/openwrt-circleci/nanopi/scripts/feeds-change.sh | bash
+            cp ../github/$SCRIPT1 script1.sh
+            ./script1.sh
+
+      - run:
+          name: Execute Script-2
+          no_output_timeout: 60m
+          command: |
+            cd openwrt/
+            cp ../github/$SCRIPT2 script2.sh
+            ./script2.sh
 
       - run:
           name: Install Feeds
@@ -58,10 +80,8 @@ jobs:
           command: |
             cd openwrt/
             pyenv global 3.5.2
-            ./scripts/feeds install -a -d m -p packages
-            ./scripts/feeds install -a -d m -p luci
-            ./scripts/feeds install -a -d y -f -p mptcp
-            wget $CONFIG -O .config
+            ./scripts/feeds install -a
+            cp ../github/$CONFIG .config
             make defconfig
 
       - run:
@@ -82,7 +102,6 @@ jobs:
           command: |
             cd openwrt/
             pyenv global 3.5.2
-            make clean
             make -j3 target/compile
 
       - run:
@@ -92,7 +111,7 @@ jobs:
             cd openwrt/
             pyenv global 3.5.2
             make -j3
-            
+
       - save_cache:
           key: cache-{{ checksum "/tmp/armv8-cache" }}
           paths:
@@ -104,9 +123,9 @@ jobs:
           command: |
             cd openwrt/bin/
             rm -rf packages/
-            cd targets/rockchip/armv8/
-            zip -r kmod-package.zip packages/
-            rm -rf packages/
+            cd targets/*/
+            zip -r armv8.zip armv8/
+            rm -rf */packages/
 
       - store_artifacts:
           path: openwrt/bin/
@@ -117,8 +136,6 @@ workflows:
     jobs:
       - build_openwrt:
           filters:
-            tags:
-              only: /.*/
             branches:
               only: 
-                - nanopi
+                - rockpie-deploy
