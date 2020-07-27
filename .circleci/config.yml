@@ -12,6 +12,7 @@ jobs:
       - SCRIPT1: scripts/feeds-change.sh
       - SCRIPT2: scripts/opkg-source.sh
       - CACHE: 21jul2020
+      - CACHE2: 21jul2020-b
 
     working_directory: ~/
     steps:
@@ -26,6 +27,7 @@ jobs:
           name: generate_cache_hash
           command: |
             echo "$CACHE" > /tmp/armv8-cache
+            echo "$CACHE2" > /tmp/armv8-cache-b
       
       - restore_cache:
           keys:
@@ -104,6 +106,11 @@ jobs:
             pyenv global 3.5.2
             make -j3 target/compile
 
+      - save_cache:
+          key: cache-{{ checksum "/tmp/armv8-cache" }}
+          paths:
+            - openwrt/
+
       - run:
           name: Build OpenWrt Image
           no_output_timeout: 60m
@@ -113,7 +120,7 @@ jobs:
             make -j3
 
       - save_cache:
-          key: cache-{{ checksum "/tmp/armv8-cache" }}
+          key: cache-{{ checksum "/tmp/armv8-cache-b" }}
           paths:
             - openwrt/
 
