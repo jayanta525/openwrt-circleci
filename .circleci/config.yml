@@ -11,8 +11,7 @@ jobs:
       - FEEDS: feeds.conf
       - SCRIPT1: scripts/feeds-change.sh
       - SCRIPT2: scripts/opkg-source.sh
-      - CACHE: 28jul-a
-      - CACHE2: 28jul-a-b
+      - CACHE: 28jul-a-b
 
     working_directory: ~/
     steps:
@@ -27,7 +26,6 @@ jobs:
           name: generate_cache_hash
           command: |
             echo "$CACHE" > /tmp/armv8-cache
-            echo "$CACHE2" > /tmp/armv8-cache-b
       
       - restore_cache:
           keys:
@@ -46,7 +44,7 @@ jobs:
       - run:
           name: Clear previous builds
           command: |
-            rm -rf openwrt/bin/targets || true
+            rm -rf openwrt/bin/ || true
 
       - run:
           name: Update Feeds
@@ -55,10 +53,10 @@ jobs:
             cd openwrt/
             pyenv global 3.5.2
             rm .config || true
-            ./scripts/feeds clean
-            rm feeds.conf || true
-            cp ../github/$FEEDS feeds.conf
-            ./scripts/feeds update -a
+#            ./scripts/feeds clean
+#            rm feeds.conf || true
+#            cp ../github/$FEEDS feeds.conf
+#            ./scripts/feeds update -a
 
       - run:
           name: Execute Script-1
@@ -87,6 +85,12 @@ jobs:
             make defconfig
 
       - run:
+          name: Load custom files
+          no_output_timeout: 60m
+          command: |
+            cp -r github/files/ openwrt/
+
+      - run:
           name: Build toolchain
           no_output_timeout: 60m
           command: |
@@ -106,11 +110,6 @@ jobs:
             pyenv global 3.5.2
             make -j3 target/compile
 
-      - save_cache:
-          key: cache-{{ checksum "/tmp/armv8-cache" }}
-          paths:
-            - openwrt/
-
       - run:
           name: Build OpenWrt Image
           no_output_timeout: 60m
@@ -120,7 +119,12 @@ jobs:
             make -j3
 
       - save_cache:
-          key: cache-{{ checksum "/tmp/armv8-cache-b" }}
+          key: cache-{{ checksum "/tmp/armv8-cache" }}
+          paths:
+            - openwrt/
+
+      - save_cache:
+          key: cache1-{{ checksum "/tmp/armv8-cache" }}
           paths:
             - openwrt/
 
@@ -128,14 +132,14 @@ jobs:
           name: Organize image files
           no_output_timeout: 60m
           command: |
-            cd openwrt/bin/
-            rm -rf packages/
-            cd targets/*/
-            zip -r armv8.zip armv8/
+            cd openwrt/
+            export COMMITMSG=$(git log -1 HEAD --pretty=format:%s)
+            cd bin/targets/*/
+            zip -r armv8-$COMMITMSG.zip armv8/
             rm -rf */packages/
 
       - store_artifacts:
-          path: openwrt/bin/
+          path: openwrt/bin/targets/
 
 workflows:
   version: 2
