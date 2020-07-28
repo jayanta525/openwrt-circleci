@@ -29,7 +29,7 @@ jobs:
       
       - restore_cache:
           keys:
-            - cache-{{ checksum "/tmp/armv8-cache" }}
+            - cache1-{{ checksum "/tmp/armv8-cache" }}
 
       - run:
           name: Clone and Pull Repo
@@ -119,11 +119,6 @@ jobs:
             make -j3
 
       - save_cache:
-          key: cache-{{ checksum "/tmp/armv8-cache" }}
-          paths:
-            - openwrt/
-
-      - save_cache:
           key: cache1-{{ checksum "/tmp/armv8-cache" }}
           paths:
             - openwrt/
@@ -132,9 +127,9 @@ jobs:
           name: Organize image files
           no_output_timeout: 60m
           command: |
-            cd openwrt/
-            export COMMITMSG=$(git log -1 HEAD --pretty=format:%s)
-            cd bin/targets/*/
+            cd github/ && export COMMITMSG=$(git log -1 HEAD --pretty=format:%s)
+            cd ..
+            cd openwrt/bin/targets/*/
             zip -r armv8-$COMMITMSG.zip armv8/
             rm -rf */packages/
 
