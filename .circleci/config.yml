@@ -6,12 +6,12 @@ jobs:
 
     environment:
       - REPO_URL: https://github.com/jayanta525/rock-pi-e.git
-      - BRANCH: rk3328
+      - BRANCH: upstream
       - CONFIG: config.seed
       - FEEDS: feeds.conf
       - SCRIPT1: scripts/feeds-change.sh
       - SCRIPT2: scripts/opkg-source.sh
-      - CACHE: 28jul-a-b
+      - CACHE: 01aug
 
     working_directory: ~/
     steps:
@@ -29,7 +29,7 @@ jobs:
       
       - restore_cache:
           keys:
-            - cache1-{{ checksum "/tmp/armv8-cache" }}
+            - cache-{{ checksum "/tmp/armv8-cache" }}
 
       - run:
           name: Clone and Pull Repo
@@ -53,10 +53,10 @@ jobs:
             cd openwrt/
             pyenv global 3.5.2
             rm .config || true
-#            ./scripts/feeds clean
-#            rm feeds.conf || true
-#            cp ../github/$FEEDS feeds.conf
-#            ./scripts/feeds update -a
+            ./scripts/feeds clean
+            rm feeds.conf || true
+            cp ../github/$FEEDS feeds.conf
+            ./scripts/feeds update -a
 
       - run:
           name: Execute Script-1
@@ -119,7 +119,7 @@ jobs:
             make -j3
 
       - save_cache:
-          key: cache1-{{ checksum "/tmp/armv8-cache" }}
+          key: cache-{{ checksum "/tmp/armv8-cache" }}
           paths:
             - openwrt/
 
@@ -144,4 +144,4 @@ workflows:
           filters:
             branches:
               only: 
-                - rockpie-deploy
+                - upstream-made
