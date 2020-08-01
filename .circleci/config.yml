@@ -110,6 +110,11 @@ jobs:
             pyenv global 3.5.2
             make -j3 target/compile
 
+      - save_cache:
+          key: cache-{{ checksum "/tmp/armv8-cache" }}
+          paths:
+            - openwrt/
+            
       - run:
           name: Build OpenWrt Image
           no_output_timeout: 60m
@@ -117,11 +122,6 @@ jobs:
             cd openwrt/
             pyenv global 3.5.2
             make -j3
-
-      - save_cache:
-          key: cache-{{ checksum "/tmp/armv8-cache" }}
-          paths:
-            - openwrt/
 
       - run:
           name: Organize image files
