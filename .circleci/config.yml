@@ -121,8 +121,8 @@ jobs:
           command: |
             cd openwrt/
             pyenv global 3.5.2
-            make -j1 V=sc
-#            make -j3
+#            make -j1 V=sc
+            make -j3
 
       - run:
           name: Organize image files
