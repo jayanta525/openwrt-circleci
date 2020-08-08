@@ -11,7 +11,7 @@ jobs:
       - FEEDS: feeds.conf
       - SCRIPT1: scripts/feeds-change.sh
       - SCRIPT2: scripts/opkg-source.sh
-      - CACHE: 01aug
+      - CACHE: 08aug
 
     working_directory: ~/
     steps:
