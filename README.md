@@ -1,5 +1,5 @@
-Rock Pi E
+NanoPi R1
 
 Deployment repository
 
-https://jayanta525.gitlab.io/openwrt-rockpie/
+https://jayanta525.gitlab.io/openwrt-nanopi-r1

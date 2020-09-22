@@ -5,13 +5,13 @@ jobs:
       image: ubuntu-1604:201903-01
 
     environment:
-      - REPO_URL: https://github.com/jayanta525/rock-pi-e.git
-      - BRANCH: rk3328
+      - REPO_URL: https://github.com/jayanta525/openwrt.git
+      - BRANCH: master
       - CONFIG: config.seed
       - FEEDS: feeds.conf
       - SCRIPT1: scripts/feeds-change.sh
       - SCRIPT2: scripts/opkg-source.sh
-      - CACHE: 28jul-a-b
+      - CACHE: 22sept
 
     working_directory: ~/
     steps:
@@ -25,11 +25,11 @@ jobs:
       - run:
           name: generate_cache_hash
           command: |
-            echo "$CACHE" > /tmp/armv8-cache
+            echo "$CACHE" > /tmp/armv7-cache
       
       - restore_cache:
           keys:
-            - cache1-{{ checksum "/tmp/armv8-cache" }}
+            - cache1-{{ checksum "/tmp/armv7-cache" }}
 
       - run:
           name: Clone and Pull Repo
@@ -53,10 +53,10 @@ jobs:
             cd openwrt/
             pyenv global 3.5.2
             rm .config || true
-#            ./scripts/feeds clean
-#            rm feeds.conf || true
-#            cp ../github/$FEEDS feeds.conf
-#            ./scripts/feeds update -a
+            ./scripts/feeds clean
+            rm feeds.conf || true
+            cp ../github/$FEEDS feeds.conf
+            ./scripts/feeds update -a
 
       - run:
           name: Execute Script-1
@@ -119,7 +119,7 @@ jobs:
             make -j3
 
       - save_cache:
-          key: cache1-{{ checksum "/tmp/armv8-cache" }}
+          key: cache1-{{ checksum "/tmp/armv7-cache" }}
           paths:
             - openwrt/
 
@@ -130,7 +130,7 @@ jobs:
             cd github/ && export COMMITMSG=$(git log -1 HEAD --pretty=format:%s)
             cd ..
             cd openwrt/bin/targets/*/
-            zip -r armv8-$COMMITMSG.zip armv8/
+            zip -r cortexa7-$COMMITMSG.zip cortexa7/
             rm -rf */packages/
 
       - store_artifacts:
@@ -144,4 +144,4 @@ workflows:
           filters:
             branches:
               only: 
-                - rockpie-deploy
+                - nanopir1-deploy
