@@ -5,13 +5,13 @@ jobs:
       image: ubuntu-1604:201903-01
 
     environment:
-      - REPO_URL: https://github.com/jayanta525/rock-pi-e.git
-      - BRANCH: rk3328
+      - REPO_URL: https://github.com/jayanta525/rock-pi-s.git
+      - BRANCH: main
       - CONFIG: config.seed
       - FEEDS: feeds.conf
       - SCRIPT1: scripts/feeds-change.sh
       - SCRIPT2: scripts/opkg-source.sh
-      - CACHE: 28jul-a-b
+      - CACHE: 30sept001
 
     working_directory: ~/
     steps:
@@ -53,10 +53,10 @@ jobs:
             cd openwrt/
             pyenv global 3.5.2
             rm .config || true
-#            ./scripts/feeds clean
-#            rm feeds.conf || true
-#            cp ../github/$FEEDS feeds.conf
-#            ./scripts/feeds update -a
+            ./scripts/feeds clean
+            rm feeds.conf || true
+            cp ../github/$FEEDS feeds.conf
+            ./scripts/feeds update -a
 
       - run:
           name: Execute Script-1
@@ -144,4 +144,4 @@ workflows:
           filters:
             branches:
               only: 
-                - rockpie-deploy
+                - rockpis-deploy
