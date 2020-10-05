@@ -47,10 +47,11 @@ jobs:
             rm -rf openwrt/bin/ || true
 
       - run:
-          name: Update Feeds
+          name: Update Git & Feeds
           no_output_timeout: 60m
           command: |
             cd openwrt/
+            git pull
             pyenv global 3.5.2
             rm .config || true
             ./scripts/feeds clean
